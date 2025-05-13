@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: facefusion-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root@12345
+      MYSQL_DATABASE: facefusion
+      MYSQL_USER: facefusion
+      MYSQL_PASSWORD: root@12345
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - facefusion-network
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: facefusion-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/facefusion
+      SPRING_DATASOURCE_USERNAME: facefusion
+      SPRING_DATASOURCE_PASSWORD: facefusion
+    networks:
+      - facefusion-network
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: facefusion-frontend
+    ports:
+      - "4200:4200"
+    networks:
+      - facefusion-network
+
+  ai-service:
+    build:
+      context: ../ai-service
+      dockerfile: Dockerfile
+    container_name: facefusion-ai
+    ports:
+      - "8000:8000"
+    networks:
+      - facefusion-network
+
+networks:
+  facefusion-network:
+    driver: bridge
+
+volumes:
+  mysql_data: 
